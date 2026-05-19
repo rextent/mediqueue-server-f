@@ -12,7 +12,7 @@ const { ObjectId } = require("mongodb");
 const { toNodeHandler } =
   require("better-auth/node");
 
-const auth = require("./auth");
+// const auth = require("./auth");
 const client = require("./db");
 
 const jwt = require("jsonwebtoken");
@@ -30,10 +30,7 @@ app.use(express.json());
 
 app.use(cookieParser());
 
-app.use(
-  "/api/auth",
-  toNodeHandler(auth)
-);
+// app.use("/api/auth", toNodeHandler(auth));
 
 app.get("/", (req, res) => {
   res.send("MediQueue Server Running");
