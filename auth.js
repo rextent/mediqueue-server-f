@@ -2,9 +2,9 @@ const { betterAuth } =
 require("better-auth");
 
 const {
-    mongodbAdapter,
+  mongodbAdapter,
 } = require(
-    "better-auth/adapters/mongodb"
+  "better-auth/adapters/mongodb"
 );
 
 const client =
@@ -12,36 +12,33 @@ require("./db");
 
 const auth = betterAuth({
 
-    database:
-        mongodbAdapter(
-            client.db("mediqueue-db")
-        ),
+  database:
+    mongodbAdapter(
+      client.db("mediqueue-db")
+    ),
 
-    trustedOrigins: [
-        process.env.CLIENT_URL,
-    ],
+  trustedOrigins: [
+    process.env.CLIENT_URL,
+  ],
 
-    baseURL:
-        process.env.BETTER_AUTH_URL,
+  baseURL:
+    process.env.BETTER_AUTH_URL,
 
-    emailAndPassword: {
-        enabled: true,
+  emailAndPassword: {
+    enabled: true,
+  },
+
+  socialProviders: {
+
+    google: {
+
+      clientId:
+        process.env.GOOGLE_CLIENT_ID,
+
+      clientSecret:
+        process.env.GOOGLE_SECRET,
     },
-
-    socialProviders: {
-
-        google: {
-
-            clientId:
-                process.env.GOOGLE_CLIENT_ID,
-
-            clientSecret:
-                process.env.GOOGLE_SECRET,
-
-        },
-
-    },
-
+  },
 });
 
 module.exports = auth;
