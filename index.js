@@ -60,31 +60,134 @@ app.post("/bookings", async(req, res) =>{
   const bookingsCollection = client.db("mediqueue-db").collection("bookings");
   const result = await bookingsCollection.insertOne(bookingData);
   res.send(result);
-})
+});
+
+app.get("/bookings/check", async (req, res) => {
+
+    const {
+        tutorId,
+        studentEmail,
+    } = req.query;
+
+    const bookingsCollection =
+        client
+            .db("mediqueue-db")
+            .collection("bookings");
+
+    const existingBooking =
+        await bookingsCollection.findOne({
+
+            tutorId,
+            studentEmail,
+
+        });
+
+    res.send({
+        exists:
+            !!existingBooking,
+    });
+});
+
+app.get("/bookings", async (req, res) => {
+
+    const email =
+        req.query.email;
+
+    const bookingsCollection =
+        client
+            .db("mediqueue-db")
+            .collection("bookings");
+
+    const result =
+        await bookingsCollection
+            .find({
+                studentEmail: email,
+            })
+            .toArray();
+
+    res.send(result);
+});
+
+app.get("/my-tutors", async (req, res) => {
+
+    const email =
+        req.query.email;
+
+    const tutorsCollection =
+        client
+            .db("mediqueue-db")
+            .collection("tutors");
+
+    const result =
+        await tutorsCollection
+            .find({
+                email: email,
+            })
+            .toArray();
+
+    res.send(result);
+});
+
+app.delete("/tutors/:id", async (req, res) => {
+
+    const id =
+        req.params.id;
+
+    const tutorsCollection =
+        client
+            .db("mediqueue-db")
+            .collection("tutors");
+
+    const result =
+        await tutorsCollection.deleteOne({
+
+            _id:
+                new ObjectId(id),
+
+        });
+
+    res.send(result);
+});
 
 app.patch("/tutors/:id", async (req, res) => {
+    const id = req.params.id;
 
-        const id = req.params.id;
+    const tutorsCollection = client
+        .db("mediqueue-db")
+        .collection("tutors");
 
-        const tutorsCollection = client.db("mediqueue-db").collection("tutors");
+    const tutor = await tutorsCollection.findOne({
+        _id: new ObjectId(id),
+    });
 
-        const result = await tutorsCollection.updateOne(
-
-                {
-                    _id:
-                        new ObjectId(id),
-                },
-
-                {
-                    $inc: {
-                        totalSlot: -1,
-                    },
-                }
-            );
-
-        res.send(result);
+    if (!tutor || tutor.totalSlot <= 0) {
+        return res.send({
+            success: false,
+            message: "No slots available",
+        });
     }
-);
+
+    const newSlot = tutor.totalSlot - 1;
+
+    const result = await tutorsCollection.updateOne(
+        {
+            _id: new ObjectId(id),
+        },
+        {
+            $set: {
+                totalSlot: newSlot,
+                status: newSlot === 0 ? "closed" : "active",
+            },
+        }
+    );
+
+    res.send({
+        success: true,
+        modifiedCount: result.modifiedCount,
+        totalSlot: newSlot,
+        status: newSlot === 0 ? "closed" : "active",
+    });
+});
 
 app.post("/tutors", async(req, res) =>{
   const tutorData = req.body;
