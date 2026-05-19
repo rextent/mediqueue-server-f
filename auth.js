@@ -7,38 +7,45 @@ const {
   "better-auth/adapters/mongodb"
 );
 
-const client =
+const connectDB =
 require("./db");
 
-const auth = betterAuth({
+async function createAuth() {
 
-  database:
-    mongodbAdapter(
-      client.db("mediqueue-db")
-    ),
+  const client =
+    await connectDB();
 
-  trustedOrigins: [
-    process.env.CLIENT_URL,
-  ],
+  return betterAuth({
 
-  baseURL:
-    process.env.BETTER_AUTH_URL,
+    database:
+      mongodbAdapter(
+        client.db("mediqueue-db")
+      ),
 
-  emailAndPassword: {
-    enabled: true,
-  },
+    trustedOrigins: [
+      process.env.CLIENT_URL,
+    ],
 
-  socialProviders: {
+    baseURL:
+      process.env.BETTER_AUTH_URL,
 
-    google: {
-
-      clientId:
-        process.env.GOOGLE_CLIENT_ID,
-
-      clientSecret:
-        process.env.GOOGLE_SECRET,
+    emailAndPassword: {
+      enabled: true,
     },
-  },
-});
 
-module.exports = auth;
+    socialProviders: {
+
+      google: {
+
+        clientId:
+          process.env.GOOGLE_CLIENT_ID,
+
+        clientSecret:
+          process.env.GOOGLE_SECRET,
+      },
+    },
+  });
+}
+
+module.exports =
+createAuth;

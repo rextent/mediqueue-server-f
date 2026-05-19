@@ -23,10 +23,10 @@ const {
 const jwt =
   require("jsonwebtoken");
 
-const client =
+const connectDB =
   require("./db");
 
-const auth =
+const createAuth =
   require("./auth");
 
 const {
@@ -54,9 +54,19 @@ app.use(cookieParser());
 
 
 // BETTER AUTH ROUTE
-app.use(
-  "/api/auth",
-  toNodeHandler(auth)
+app.all(
+  "/api/auth/{*any}",
+
+  async (req, res) => {
+
+    const auth =
+      await createAuth();
+
+    return toNodeHandler(auth)(
+      req,
+      res
+    );
+  }
 );
 
 
@@ -191,6 +201,9 @@ app.get(
   "/tutors",
   async (req, res) => {
 
+    const client =
+      await connectDB();
+
     const tutorsCollection =
       client
         .db("mediqueue-db")
@@ -212,6 +225,9 @@ app.get(
 app.get(
   "/tutors/:id",
   async (req, res) => {
+
+    const client =
+      await connectDB();
 
     const id =
       req.params.id;
@@ -241,6 +257,9 @@ app.post(
   "/tutors",
   async (req, res) => {
 
+    const client =
+      await connectDB();
+
     const tutorData =
       req.body;
 
@@ -265,6 +284,9 @@ app.post(
 app.patch(
   "/tutors/:id",
   async (req, res) => {
+
+    const client =
+      await connectDB();
 
     const id =
       req.params.id;
@@ -306,6 +328,9 @@ app.delete(
 
   async (req, res) => {
 
+    const client =
+      await connectDB();
+
     const id =
       req.params.id;
 
@@ -337,6 +362,9 @@ app.get(
 
   async (req, res) => {
 
+    const client =
+      await connectDB();
+
     const email =
       req.query.email;
 
@@ -365,6 +393,9 @@ app.post(
   "/bookings",
   async (req, res) => {
 
+    const client =
+      await connectDB();
+
     const bookingData =
       req.body;
 
@@ -389,6 +420,9 @@ app.post(
 app.get(
   "/bookings/check",
   async (req, res) => {
+
+    const client =
+      await connectDB();
 
     const {
       tutorId,
@@ -423,6 +457,9 @@ app.get(
   "/bookings",
   async (req, res) => {
 
+    const client =
+      await connectDB();
+
     const email =
       req.query.email;
 
@@ -453,6 +490,9 @@ app.patch(
   verifyToken,
 
   async (req, res) => {
+
+    const client =
+      await connectDB();
 
     const id =
       req.params.id;
@@ -528,26 +568,6 @@ app.patch(
     });
   }
 );
-
-
-// MONGODB CONNECT
-async function run() {
-
-  try {
-
-    await client.connect();
-
-    console.log(
-      "MongoDB Connected"
-    );
-
-  } catch (error) {
-
-    console.log(error);
-  }
-}
-
-run();
 
 
 // LOCAL SERVER
