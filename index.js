@@ -1,4 +1,5 @@
 const dns = require("node:dns");
+
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 require("dotenv").config();
@@ -9,12 +10,9 @@ const cookieParser = require("cookie-parser");
 
 const { ObjectId } = require("mongodb");
 
-const { toNodeHandler } =
-  require("better-auth/node");
-
-// const auth = require("./auth");
-const connectDB = require("./db");
 const jwt = require("jsonwebtoken");
+
+const connectDB = require("./db");
 
 const app = express();
 
@@ -29,28 +27,27 @@ app.use(express.json());
 
 app.use(cookieParser());
 
-// app.use("/api/auth", toNodeHandler(auth));
-
 app.get("/", (req, res) => {
+
   res.send("MediQueue Server Running");
 });
 
+
+// JWT TOKEN
 app.post("/jwt", async (req, res) => {
 
-  const user =
-    req.body;
+  const user = req.body;
 
-  const token =
-    jwt.sign(
+  const token = jwt.sign(
 
-      user,
+    user,
 
-      process.env.JWT_SECRET,
+    process.env.JWT_SECRET,
 
-      {
-        expiresIn: "7d",
-      }
-    );
+    {
+      expiresIn: "7d",
+    }
+  );
 
   res
     .cookie(
@@ -79,9 +76,12 @@ app.post("/jwt", async (req, res) => {
     });
 });
 
+
+// LOGOUT
 app.post("/logout", (req, res) => {
 
-  res.clearCookie("token")
+  res
+    .clearCookie("token")
 
     .send({
 
@@ -89,13 +89,14 @@ app.post("/logout", (req, res) => {
     });
 });
 
+
+// VERIFY TOKEN
 const verifyToken =
   (req, res, next) => {
 
     const token =
       req.cookies.token;
 
-    // NO TOKEN
     if (!token) {
 
       return res.status(401).send({
@@ -105,7 +106,6 @@ const verifyToken =
       });
     }
 
-    // VERIFY TOKEN
     jwt.verify(
 
       token,
@@ -130,81 +130,12 @@ const verifyToken =
     );
   };
 
+
+// GET ALL TUTORS
 app.get("/tutors", async (req, res) => {
-  const tutorsCollection = client.db("mediqueue-db").collection("tutors");
 
-  const result = await tutorsCollection.find().toArray();
-
-  res.send(result);
-})
-
-app.get("/tutors/:id", async (req, res) => {
-  const id = req.params.id;
-
-  const tutorsCollection = client.db("mediqueue-db").collection("tutors");
-  const result = await tutorsCollection.findOne({ _id: new ObjectId(id), });
-
-  res.send(result);
-})
-
-app.post("/bookings", async (req, res) => {
-  const bookingData = req.body;
-
-  const bookingsCollection = client.db("mediqueue-db").collection("bookings");
-  const result = await bookingsCollection.insertOne(bookingData);
-  res.send(result);
-});
-
-app.get("/bookings/check", async (req, res) => {
-
-  const {
-    tutorId,
-    studentEmail,
-  } = req.query;
-
-  const bookingsCollection =
-    client
-      .db("mediqueue-db")
-      .collection("bookings");
-
-  const existingBooking =
-    await bookingsCollection.findOne({
-
-      tutorId,
-      studentEmail,
-
-    });
-
-  res.send({
-    exists:
-      !!existingBooking,
-  });
-});
-
-app.get("/bookings", async (req, res) => {
-
-  const email =
-    req.query.email;
-
-  const bookingsCollection =
-    client
-      .db("mediqueue-db")
-      .collection("bookings");
-
-  const result =
-    await bookingsCollection
-      .find({
-        studentEmail: email,
-      })
-      .toArray();
-
-  res.send(result);
-});
-
-app.get("/my-tutors", verifyToken, async (req, res) => {
-
-  const email =
-    req.query.email;
+  const client =
+    await connectDB();
 
   const tutorsCollection =
     client
@@ -213,15 +144,18 @@ app.get("/my-tutors", verifyToken, async (req, res) => {
 
   const result =
     await tutorsCollection
-      .find({
-        email: email,
-      })
+      .find()
       .toArray();
 
   res.send(result);
 });
 
-app.delete("/tutors/:id", verifyToken, async (req, res) => {
+
+// GET SINGLE TUTOR
+app.get("/tutors/:id", async (req, res) => {
+
+  const client =
+    await connectDB();
 
   const id =
     req.params.id;
@@ -232,95 +166,44 @@ app.delete("/tutors/:id", verifyToken, async (req, res) => {
       .collection("tutors");
 
   const result =
-    await tutorsCollection.deleteOne({
-
-      _id:
-        new ObjectId(id),
-
-    });
-
-  res.send(result);
-});
-
-app.patch("/book-tutor/:id", verifyToken, async (req, res) => {
-
-  const id =
-    req.params.id;
-
-  const tutorsCollection =
-    client
-      .db("mediqueue-db")
-      .collection("tutors");
-
-  // FIND TUTOR
-  const tutor =
     await tutorsCollection.findOne({
 
       _id:
         new ObjectId(id),
     });
 
-  // CHECK SLOT
-  if (
-    !tutor ||
-    tutor.totalSlot <= 0
-  ) {
-
-    return res.send({
-
-      success: false,
-
-      message:
-        "No slots available",
-    });
-  }
-
-  // REDUCE SLOT
-  const newSlot =
-    tutor.totalSlot - 1;
-
-  // UPDATE DB
-  const result =
-    await tutorsCollection.updateOne(
-
-      {
-        _id:
-          new ObjectId(id),
-      },
-
-      {
-        $set: {
-
-          totalSlot:
-            newSlot,
-
-          status:
-            newSlot === 0
-              ? "closed"
-              : "active",
-        },
-      }
-    );
-
-  // RESPONSE
-  res.send({
-
-    success: true,
-
-    modifiedCount:
-      result.modifiedCount,
-
-    totalSlot:
-      newSlot,
-
-    status:
-      newSlot === 0
-        ? "closed"
-        : "active",
-  });
+  res.send(result);
 });
 
+
+// ADD TUTOR
+app.post("/tutors", async (req, res) => {
+
+  const client =
+    await connectDB();
+
+  const tutorData =
+    req.body;
+
+  const tutorsCollection =
+    client
+      .db("mediqueue-db")
+      .collection("tutors");
+
+  const result =
+    await tutorsCollection.insertOne(
+      tutorData
+    );
+
+  res.send(result);
+});
+
+
+// UPDATE TUTOR
 app.patch("/tutors/:id", async (req, res) => {
+
+  const client =
+    await connectDB();
 
   const id =
     req.params.id;
@@ -350,16 +233,219 @@ app.patch("/tutors/:id", async (req, res) => {
   res.send(result);
 });
 
-app.post("/tutors", async (req, res) => {
-  const tutorData = req.body;
 
-  const tutorsCollection = client.db("mediqueue-db").collection("tutors");
+// DELETE TUTOR
+app.delete("/tutors/:id", verifyToken, async (req, res) => {
 
-  const result = await tutorsCollection.insertOne(tutorData);
+  const client =
+    await connectDB();
+
+  const id =
+    req.params.id;
+
+  const tutorsCollection =
+    client
+      .db("mediqueue-db")
+      .collection("tutors");
+
+  const result =
+    await tutorsCollection.deleteOne({
+
+      _id:
+        new ObjectId(id),
+    });
 
   res.send(result);
-})
+});
 
+
+// MY TUTORS
+app.get("/my-tutors", verifyToken, async (req, res) => {
+
+  const client =
+    await connectDB();
+
+  const email =
+    req.query.email;
+
+  const tutorsCollection =
+    client
+      .db("mediqueue-db")
+      .collection("tutors");
+
+  const result =
+    await tutorsCollection
+      .find({
+
+        email:
+          email,
+      })
+      .toArray();
+
+  res.send(result);
+});
+
+
+// ADD BOOKING
+app.post("/bookings", async (req, res) => {
+
+  const client =
+    await connectDB();
+
+  const bookingData =
+    req.body;
+
+  const bookingsCollection =
+    client
+      .db("mediqueue-db")
+      .collection("bookings");
+
+  const result =
+    await bookingsCollection.insertOne(
+      bookingData
+    );
+
+  res.send(result);
+});
+
+
+// CHECK BOOKING
+app.get("/bookings/check", async (req, res) => {
+
+  const client =
+    await connectDB();
+
+  const {
+    tutorId,
+    studentEmail,
+  } = req.query;
+
+  const bookingsCollection =
+    client
+      .db("mediqueue-db")
+      .collection("bookings");
+
+  const existingBooking =
+    await bookingsCollection.findOne({
+
+      tutorId,
+      studentEmail,
+    });
+
+  res.send({
+
+    exists:
+      !!existingBooking,
+  });
+});
+
+
+// GET BOOKINGS
+app.get("/bookings", async (req, res) => {
+
+  const client =
+    await connectDB();
+
+  const email =
+    req.query.email;
+
+  const bookingsCollection =
+    client
+      .db("mediqueue-db")
+      .collection("bookings");
+
+  const result =
+    await bookingsCollection
+      .find({
+
+        studentEmail:
+          email,
+      })
+      .toArray();
+
+  res.send(result);
+});
+
+
+// BOOK TUTOR
+app.patch("/book-tutor/:id", verifyToken, async (req, res) => {
+
+  const client =
+    await connectDB();
+
+  const id =
+    req.params.id;
+
+  const tutorsCollection =
+    client
+      .db("mediqueue-db")
+      .collection("tutors");
+
+  const tutor =
+    await tutorsCollection.findOne({
+
+      _id:
+        new ObjectId(id),
+    });
+
+  if (
+    !tutor ||
+    tutor.totalSlot <= 0
+  ) {
+
+    return res.send({
+
+      success: false,
+
+      message:
+        "No slots available",
+    });
+  }
+
+  const newSlot =
+    tutor.totalSlot - 1;
+
+  const result =
+    await tutorsCollection.updateOne(
+
+      {
+        _id:
+          new ObjectId(id),
+      },
+
+      {
+        $set: {
+
+          totalSlot:
+            newSlot,
+
+          status:
+            newSlot === 0
+              ? "closed"
+              : "active",
+        },
+      }
+    );
+
+  res.send({
+
+    success: true,
+
+    modifiedCount:
+      result.modifiedCount,
+
+    totalSlot:
+      newSlot,
+
+    status:
+      newSlot === 0
+        ? "closed"
+        : "active",
+  });
+});
+
+
+// LOCAL SERVER
 if (process.env.NODE_ENV !== "production") {
 
   app.listen(process.env.PORT, () => {
@@ -367,9 +453,7 @@ if (process.env.NODE_ENV !== "production") {
     console.log(
       `Server running on port ${process.env.PORT}`
     );
-
   });
-
 }
 
 module.exports = app;
