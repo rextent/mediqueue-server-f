@@ -13,8 +13,7 @@ const { toNodeHandler } =
   require("better-auth/node");
 
 // const auth = require("./auth");
-const client = require("./db");
-
+const connectDB = require("./db");
 const jwt = require("jsonwebtoken");
 
 const app = express();

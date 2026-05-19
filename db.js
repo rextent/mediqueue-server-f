@@ -1,36 +1,44 @@
-const { MongoClient, ServerApiVersion } =
-    require("mongodb");
+const {
+
+    MongoClient,
+
+    ServerApiVersion,
+
+} = require("mongodb");
 
 const uri = process.env.MONGODB_URI;
 
-const client = new MongoClient(uri, {
+const client = new MongoClient(
 
-    serverApi: {
+    uri,
 
-        version: ServerApiVersion.v1,
+    {
 
-        strict: true,
+        serverApi: {
 
-        deprecationErrors: true,
-    },
-});
+            version: ServerApiVersion.v1,
+
+            strict: true,
+
+            deprecationErrors: true,
+        },
+    }
+);
+
+let isConnected = false;
 
 async function connectDB() {
 
-    try {
+    if (!isConnected) {
 
         await client.connect();
 
+        isConnected = true;
+
         console.log("MongoDB Connected");
-
     }
 
-    catch (error) {
-
-        console.log(error);
-    }
+    return client;
 }
 
-connectDB();
-
-module.exports = client;
+module.exports = connectDB;
