@@ -15,6 +15,8 @@ require("better-auth/node");
 const auth = require("./auth");
 const client = require("./db");
 
+const jwt = require("jsonwebtoken");
+
 const app = express();
 
 app.use(
@@ -36,6 +38,95 @@ app.use(
 app.get("/", (req, res) => {
   res.send("MediQueue Server Running");
 });
+
+app.post("/jwt", async (req, res) => {
+
+    const user =
+        req.body;
+
+    const token =
+        jwt.sign(
+
+            user,
+
+            process.env.JWT_SECRET,
+
+            {
+                expiresIn: "7d",
+            }
+        );
+
+    res
+        .cookie(
+
+            "token",
+
+            token,
+
+            {
+
+                httpOnly: true,
+
+                secure: false,
+            }
+        )
+
+        .send({
+
+            success: true,
+        });
+});
+
+app.post("/logout", (req, res) => {
+
+    res.clearCookie("token")
+
+        .send({
+
+            success: true,
+        });
+});
+
+const verifyToken =
+    (req, res, next) => {
+
+        const token =
+            req.cookies.token;
+
+        // NO TOKEN
+        if (!token) {
+
+            return res.status(401).send({
+
+                message:
+                    "Unauthorized Access",
+            });
+        }
+
+        // VERIFY TOKEN
+        jwt.verify(
+
+            token,
+
+            process.env.JWT_SECRET,
+
+            (error, decoded) => {
+
+                if (error) {
+
+                    return res.status(401).send({
+
+                        message:
+                            "Unauthorized Access",
+                    });
+                }
+
+                req.user = decoded;
+
+                next();
+            }
+        );
+    };
 
 app.get("/tutors", async(req, res)=>{
   const tutorsCollection = client.db("mediqueue-db").collection("tutors");
@@ -108,7 +199,7 @@ app.get("/bookings", async (req, res) => {
     res.send(result);
 });
 
-app.get("/my-tutors", async (req, res) => {
+app.get("/my-tutors", verifyToken, async (req, res) => {
 
     const email =
         req.query.email;
@@ -128,7 +219,7 @@ app.get("/my-tutors", async (req, res) => {
     res.send(result);
 });
 
-app.delete("/tutors/:id", async (req, res) => {
+app.delete("/tutors/:id",verifyToken,  async (req, res) => {
 
     const id =
         req.params.id;
@@ -149,7 +240,7 @@ app.delete("/tutors/:id", async (req, res) => {
     res.send(result);
 });
 
-app.patch("/book-tutor/:id", async (req, res) => {
+app.patch("/book-tutor/:id", verifyToken, async (req, res) => {
 
     const id =
         req.params.id;
