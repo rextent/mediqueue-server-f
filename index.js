@@ -7,6 +7,8 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
+const { ObjectId } = require("mongodb");
+
 const { toNodeHandler } =
 require("better-auth/node");
 
@@ -42,6 +44,47 @@ app.get("/tutors", async(req, res)=>{
 
   res.send(result);
 })
+
+app.get("/tutors/:id", async(req, res)=>{
+  const id = req.params.id;
+
+  const tutorsCollection = client.db("mediqueue-db").collection("tutors");
+  const result = await tutorsCollection.findOne({_id: new ObjectId(id),});
+
+  res.send(result);
+})
+
+app.post("/bookings", async(req, res) =>{
+  const bookingData = req.body;
+
+  const bookingsCollection = client.db("mediqueue-db").collection("bookings");
+  const result = await bookingsCollection.insertOne(bookingData);
+  res.send(result);
+})
+
+app.patch("/tutors/:id", async (req, res) => {
+
+        const id = req.params.id;
+
+        const tutorsCollection = client.db("mediqueue-db").collection("tutors");
+
+        const result = await tutorsCollection.updateOne(
+
+                {
+                    _id:
+                        new ObjectId(id),
+                },
+
+                {
+                    $inc: {
+                        totalSlot: -1,
+                    },
+                }
+            );
+
+        res.send(result);
+    }
+);
 
 app.post("/tutors", async(req, res) =>{
   const tutorData = req.body;
