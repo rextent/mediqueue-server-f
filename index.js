@@ -11,6 +11,7 @@ const { toNodeHandler } =
 require("better-auth/node");
 
 const auth = require("./auth");
+const client = require("./db");
 
 const app = express();
 
@@ -33,6 +34,24 @@ app.use(
 app.get("/", (req, res) => {
   res.send("MediQueue Server Running");
 });
+
+app.get("/tutors", async(req, res)=>{
+  const tutorsCollection = client.db("mediqueue-db").collection("tutors");
+
+  const result = await tutorsCollection.find().toArray();
+
+  res.send(result);
+})
+
+app.post("/tutors", async(req, res) =>{
+  const tutorData = req.body;
+  
+  const tutorsCollection = client.db("mediqueue-db").collection("tutors");
+
+  const result = await tutorsCollection.insertOne(tutorData);
+
+  res.send(result);
+})
 
 app.listen(process.env.PORT, () => {
   console.log(
