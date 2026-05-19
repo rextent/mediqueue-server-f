@@ -149,44 +149,112 @@ app.delete("/tutors/:id", async (req, res) => {
     res.send(result);
 });
 
-app.patch("/tutors/:id", async (req, res) => {
-    const id = req.params.id;
+app.patch("/book-tutor/:id", async (req, res) => {
 
-    const tutorsCollection = client
-        .db("mediqueue-db")
-        .collection("tutors");
+    const id =
+        req.params.id;
 
-    const tutor = await tutorsCollection.findOne({
-        _id: new ObjectId(id),
-    });
+    const tutorsCollection =
+        client
+            .db("mediqueue-db")
+            .collection("tutors");
 
-    if (!tutor || tutor.totalSlot <= 0) {
+    // FIND TUTOR
+    const tutor =
+        await tutorsCollection.findOne({
+
+            _id:
+                new ObjectId(id),
+        });
+
+    // CHECK SLOT
+    if (
+        !tutor ||
+        tutor.totalSlot <= 0
+    ) {
+
         return res.send({
+
             success: false,
-            message: "No slots available",
+
+            message:
+                "No slots available",
         });
     }
 
-    const newSlot = tutor.totalSlot - 1;
+    // REDUCE SLOT
+    const newSlot =
+        tutor.totalSlot - 1;
 
-    const result = await tutorsCollection.updateOne(
-        {
-            _id: new ObjectId(id),
-        },
-        {
-            $set: {
-                totalSlot: newSlot,
-                status: newSlot === 0 ? "closed" : "active",
+    // UPDATE DB
+    const result =
+        await tutorsCollection.updateOne(
+
+            {
+                _id:
+                    new ObjectId(id),
             },
-        }
-    );
 
+            {
+                $set: {
+
+                    totalSlot:
+                        newSlot,
+
+                    status:
+                        newSlot === 0
+                            ? "closed"
+                            : "active",
+                },
+            }
+        );
+
+    // RESPONSE
     res.send({
+
         success: true,
-        modifiedCount: result.modifiedCount,
-        totalSlot: newSlot,
-        status: newSlot === 0 ? "closed" : "active",
+
+        modifiedCount:
+            result.modifiedCount,
+
+        totalSlot:
+            newSlot,
+
+        status:
+            newSlot === 0
+                ? "closed"
+                : "active",
     });
+});
+
+app.patch("/tutors/:id", async (req, res) => {
+
+    const id =
+        req.params.id;
+
+    const updatedTutor =
+        req.body;
+
+    const tutorsCollection =
+        client
+            .db("mediqueue-db")
+            .collection("tutors");
+
+    const result =
+        await tutorsCollection.updateOne(
+
+            {
+                _id:
+                    new ObjectId(id),
+            },
+
+            {
+                $set:
+                    updatedTutor,
+            }
+        );
+
+    res.send(result);
 });
 
 app.post("/tutors", async(req, res) =>{
