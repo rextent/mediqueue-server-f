@@ -113,11 +113,9 @@ app.post(
             process.env.NODE_ENV ===
             "production",
 
-          sameSite:
-            process.env.NODE_ENV ===
-            "production"
-              ? "none"
-              : "lax",
+          sameSite: "none",
+
+          secure: true,
         }
       )
 
