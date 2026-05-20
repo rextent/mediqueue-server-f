@@ -426,6 +426,47 @@ app.get(
   }
 );
 
+app.patch(
+  "/user/:email",
+  async (req, res) => {
+
+    const client =
+      await connectDB();
+
+    const email =
+      req.params.email;
+
+    const updatedData =
+      req.body;
+
+    const userCollection =
+      client
+        .db("mediqueue-db")
+        .collection("user");
+
+    const result =
+      await userCollection.updateOne(
+
+        {
+          email: email,
+        },
+
+        {
+          $set: {
+
+            name:
+              updatedData.name,
+
+            image:
+              updatedData.image,
+          },
+        }
+      );
+
+    res.send(result);
+  }
+);
+
 
 // BOOK TUTOR
 app.patch(
