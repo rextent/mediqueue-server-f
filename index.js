@@ -270,6 +270,36 @@ app.delete(
   }
 );
 
+// Detele cancel booking
+app.delete(
+  "/bookings/:id",
+  async (req, res) => {
+
+    const client =
+      await connectDB();
+
+    const id =
+      req.params.id;
+
+    const bookingsCollection =
+      client
+        .db("mediqueue-db")
+        .collection(
+          "bookings"
+        );
+
+    const result =
+      await bookingsCollection.deleteOne(
+        {
+          _id:
+            new ObjectId(id),
+        }
+      );
+
+    res.send(result);
+  }
+);
+
 
 // MY TUTORS
 app.get(
