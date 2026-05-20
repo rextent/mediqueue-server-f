@@ -41,6 +41,7 @@ async function createAuth() {
         },
 
         emailAndPassword: {
+
             enabled: true,
         },
 
