@@ -23,6 +23,7 @@ async function createAuth() {
             ),
 
         trustedOrigins: [
+
             process.env.CLIENT_URL,
         ],
 
@@ -30,10 +31,6 @@ async function createAuth() {
             process.env.BETTER_AUTH_URL,
 
         advanced: {
-
-            crossSubDomainCookies: {
-                enabled: true,
-            },
 
             defaultCookieAttributes: {
 
