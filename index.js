@@ -20,9 +20,6 @@ const {
   ObjectId,
 } = require("mongodb");
 
-const jwt =
-  require("jsonwebtoken");
-
 const connectDB =
   require("./db");
 
@@ -77,117 +74,6 @@ app.get("/", (req, res) => {
     "MediQueue Server Running"
   );
 });
-
-
-// JWT TOKEN
-app.post(
-  "/jwt",
-  async (req, res) => {
-
-    const user =
-      req.body;
-
-    const token =
-      jwt.sign(
-
-        user,
-
-        process.env.JWT_SECRET,
-
-        {
-          expiresIn:
-            "7d",
-        }
-      );
-
-    res
-      .cookie(
-        "token",
-
-        token,
-
-        {
-          httpOnly: true,
-
-          sameSite: "none",
-
-          secure: true,
-        }
-      )
-
-      .send({
-        success: true,
-      });
-  }
-);
-
-
-// LOGOUT
-app.post(
-  "/logout",
-  (req, res) => {
-
-    res
-      .clearCookie("token")
-
-      .send({
-        success: true,
-      });
-  }
-);
-
-
-// VERIFY TOKEN
-const verifyToken =
-  (
-    req,
-    res,
-    next
-  ) => {
-
-    const token =
-      req.cookies.token;
-
-    if (!token) {
-
-      return res
-        .status(401)
-        .send({
-
-          message:
-            "Unauthorized Access",
-        });
-    }
-
-    jwt.verify(
-
-      token,
-
-      process.env.JWT_SECRET,
-
-      (
-        error,
-        decoded
-      ) => {
-
-        if (error) {
-
-          return res
-            .status(401)
-            .send({
-
-              message:
-                "Unauthorized Access",
-            });
-        }
-
-        req.user =
-          decoded;
-
-        next();
-      }
-    );
-  };
 
 
 // GET ALL TUTORS
@@ -317,9 +203,6 @@ app.patch(
 // DELETE TUTOR
 app.delete(
   "/tutors/:id",
-
-  verifyToken,
-
   async (req, res) => {
 
     const client =
@@ -351,9 +234,6 @@ app.delete(
 // MY TUTORS
 app.get(
   "/my-tutors",
-
-  verifyToken,
-
   async (req, res) => {
 
     const client =
@@ -480,9 +360,6 @@ app.get(
 // BOOK TUTOR
 app.patch(
   "/book-tutor/:id",
-
-  verifyToken,
-
   async (req, res) => {
 
     const client =
