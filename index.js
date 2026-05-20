@@ -91,9 +91,49 @@ app.get(
           "tutors"
         );
 
+    // QUERY PARAMS
+    const search =
+      req.query.search || "";
+
+    const startDate =
+      req.query.startDate;
+
+    const endDate =
+      req.query.endDate;
+
+    // FILTER OBJECT
+    let query = {};
+
+    // SEARCH BY NAME
+    if (search) {
+
+      query.tutorName = {
+
+        $regex: search,
+
+        $options: "i",
+      };
+    }
+
+    // DATE FILTER
+    if (
+      startDate &&
+      endDate
+    ) {
+
+      query.sessionStartDate = {
+
+        $gte: startDate,
+
+        $lte: endDate,
+      };
+    }
+
     const result =
       await tutorsCollection
-        .find()
+
+        .find(query)
+
         .toArray();
 
     res.send(result);
