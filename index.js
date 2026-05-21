@@ -45,6 +45,7 @@ app.use(
 
 
 // BETTER AUTH এর আগে cookie parser
+app.use(express.json());
 app.use(cookieParser());
 
 
@@ -62,7 +63,7 @@ app.use("/api/auth", async (req, res) => {
 
 
 // অন্য routes এর জন্য json parser
-app.use(express.json());
+
 
 
 // BETTER AUTH ROUTE
