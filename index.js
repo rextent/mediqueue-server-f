@@ -40,24 +40,6 @@ app.use(cors({
 
 app.use(cookieParser());
 
-
-// BETTER AUTH ROUTE
-app.use("/api/auth", async (req, res) => {
-
-  const auth =
-    await createAuth();
-
-  const handler =
-    toNodeHandler(auth);
-
-  return handler(req, res);
-});
-
-
-// EXPRESS JSON MUST BE AFTER AUTH
-app.use(express.json());
-
-
 // BETTER AUTH ROUTE
 app.all("/api/auth/{*any}", async (req, res) => {
 
@@ -68,6 +50,8 @@ app.all("/api/auth/{*any}", async (req, res) => {
 
   return handler(req, res);
 });
+
+app.use(express.json());
 
 
 // ROOT
