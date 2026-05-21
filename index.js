@@ -44,10 +44,25 @@ app.use(
 );
 
 
-// MIDDLEWARE
-app.use(express.json());
-
+// BETTER AUTH এর আগে cookie parser
 app.use(cookieParser());
+
+
+// BETTER AUTH ROUTE
+app.all("/api/auth/*", async (req, res) => {
+
+  const auth =
+    await createAuth();
+
+  const handler =
+    toNodeHandler(auth);
+
+  return handler(req, res);
+});
+
+
+// অন্য routes এর জন্য json parser
+app.use(express.json());
 
 
 // BETTER AUTH ROUTE
