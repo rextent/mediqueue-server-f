@@ -51,11 +51,14 @@ app.use(cookieParser());
 
 
 // BETTER AUTH ROUTE
-app.use("/api/auth", async (req, res) => {
+app.all("/api/auth/{*any}", async (req, res) => {
 
   const auth = await createAuth();
 
-  return toNodeHandler(auth)(req, res);
+  const handler =
+    toNodeHandler(auth);
+
+  return handler(req, res);
 });
 
 
