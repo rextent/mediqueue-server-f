@@ -1,63 +1,66 @@
-const { betterAuth } =
-    require("better-auth");
-
 const {
-    mongodbAdapter,
+  mongodbAdapter,
 } = require(
-    "better-auth/adapters/mongodb"
+  "better-auth/adapters/mongodb"
 );
 
 const connectDB =
-    require("./db");
+  require("./db");
 
 async function createAuth() {
 
-    const client =
-        await connectDB();
+  const { betterAuth } =
+    await import("better-auth");
 
-    return betterAuth({
+  const client =
+    await connectDB();
 
-        database:
-            mongodbAdapter(
-                client.db("mediqueue-db")
-            ),
+  return betterAuth({
 
-        trustedOrigins: [
+    database:
+      mongodbAdapter(
+        client.db("mediqueue-db")
+      ),
 
-            process.env.CLIENT_URL,
-        ],
+    trustedOrigins: [
 
-        baseURL:
-            process.env.BETTER_AUTH_URL,
+      process.env.CLIENT_URL,
+    ],
 
-        advanced: {
+    baseURL:
+      process.env.BETTER_AUTH_URL,
 
-            defaultCookieAttributes: {
+    advanced: {
 
-                sameSite: "none",
+      defaultCookieAttributes: {
 
-                secure: true,
-            },
-        },
+        sameSite: "none",
 
-        emailAndPassword: {
+        secure: true,
+      },
+    },
 
-            enabled: true,
-        },
+    emailAndPassword: {
 
-        socialProviders: {
+      enabled: true,
+    },
 
-            google: {
+    socialProviders: {
 
-                clientId:
-                    process.env.GOOGLE_CLIENT_ID,
+      google: {
 
-                clientSecret:
-                    process.env.GOOGLE_SECRET,
-            },
-        },
-    });
+        clientId:
+          process.env.GOOGLE_CLIENT_ID,
+
+        clientSecret:
+          process.env.GOOGLE_SECRET,
+      },
+    },
+
+    secret:
+      process.env.BETTER_AUTH_SECRET,
+  });
 }
 
 module.exports =
-    createAuth;
+  createAuth;
