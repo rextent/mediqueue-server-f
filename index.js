@@ -33,19 +33,11 @@ const {
 const app = express();
 
 
-// CORS
-app.use(
-  cors({
-    origin:
-      process.env.CLIENT_URL,
+app.use(cors({
+  origin: process.env.CLIENT_URL,
+  credentials: true,
+}));
 
-    credentials: true,
-  })
-);
-
-
-// BETTER AUTH এর আগে cookie parser
-app.use(express.json());
 app.use(cookieParser());
 
 
@@ -62,8 +54,8 @@ app.use("/api/auth", async (req, res) => {
 });
 
 
-// অন্য routes এর জন্য json parser
-
+// EXPRESS JSON MUST BE AFTER AUTH
+app.use(express.json());
 
 
 // BETTER AUTH ROUTE
