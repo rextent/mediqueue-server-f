@@ -183,6 +183,8 @@ app.post(
     const tutorData =
       req.body;
 
+    delete tutorData._id;
+
     const tutorsCollection =
       client
         .db("mediqueue-db")
