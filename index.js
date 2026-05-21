@@ -45,9 +45,17 @@ app.use(
 
 
 // MIDDLEWARE
-// app.use(express.json());
+app.use(express.json());
 
 app.use(cookieParser());
+
+// FIX BETTER AUTH BODY ISSUE
+app.use(
+  "/api/auth",
+  express.raw({
+    type: "*/*",
+  })
+);
 
 
 // BETTER AUTH ROUTE
@@ -191,14 +199,6 @@ app.post(
           .collection(
             "tutors"
           );
-
-      // remove _id safely
-      if (
-        tutorData._id
-      ) {
-
-        delete tutorData._id;
-      }
 
       const result =
         await tutorsCollection.insertOne(
