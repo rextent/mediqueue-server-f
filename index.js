@@ -50,29 +50,21 @@ app.use(express.json());
 app.use(cookieParser());
 
 // FIX BETTER AUTH BODY ISSUE
-app.use(
-  "/api/auth",
-  express.raw({
-    type: "*/*",
-  })
-);
+// app.use(
+//   "/api/auth",
+//   express.raw({
+//     type: "*/*",
+//   })
+// );
 
 
 // BETTER AUTH ROUTE
-app.all(
-  "/api/auth/{*any}",
+app.all("/api/auth/*", async (req, res) => {
 
-  async (req, res) => {
+  const auth = await createAuth();
 
-    const auth =
-      await createAuth();
-
-    return toNodeHandler(auth)(
-      req,
-      res
-    );
-  }
-);
+  return toNodeHandler(auth)(req, res);
+});
 
 
 // ROOT
