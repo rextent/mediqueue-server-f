@@ -177,27 +177,45 @@ app.post(
   "/tutors",
   async (req, res) => {
 
-    const client =
-      await connectDB();
+    try {
 
-    const tutorData =
-      req.body;
+      const client =
+        await connectDB();
 
-    delete tutorData._id;
+      const tutorData =
+        req.body || {};
 
-    const tutorsCollection =
-      client
-        .db("mediqueue-db")
-        .collection(
-          "tutors"
+      const tutorsCollection =
+        client
+          .db("mediqueue-db")
+          .collection(
+            "tutors"
+          );
+
+      // remove _id safely
+      if (
+        tutorData._id
+      ) {
+
+        delete tutorData._id;
+      }
+
+      const result =
+        await tutorsCollection.insertOne(
+          tutorData
         );
 
-    const result =
-      await tutorsCollection.insertOne(
-        tutorData
-      );
+      res.send(result);
 
-    res.send(result);
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).send({
+        message:
+          "Failed to add tutor",
+      });
+    }
   }
 );
 
